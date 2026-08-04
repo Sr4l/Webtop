@@ -1,6 +1,6 @@
 # --- Konfiguration ---
 IMAGE_NAME   = ubuntu-kde-managed
-TAG          = 26.04
+TAG          = 24.04
 CONTAINER_NAME = ubuntu-kde-running
 PORT         = 3000
 SHM_SIZE     = 2gb
@@ -12,7 +12,7 @@ all: clean build start
 # --- Build-Prozess ---
 .PHONY: build
 build:
-	@echo "==> Baue Ubuntu 26.04 Docker-Image $(IMAGE_NAME):$(TAG)..."
+	@echo "==> Baue Ubuntu 24.04 Docker-Image $(IMAGE_NAME):$(TAG)..."
 	docker build -t $(IMAGE_NAME):$(TAG) .
 
 # --- Container starten ---
@@ -23,10 +23,8 @@ start:
 		--name $(CONTAINER_NAME) \
 		-p $(PORT):3000 \
 		--shm-size=$(SHM_SIZE) \
-		--device /dev/dri:/dev/dri \
-		--device /dev/snd:/dev/snd \
 		$(IMAGE_NAME):$(TAG)
-	@echo "==> Selkies läuft auf http://localhost:$(PORT)"
+	@echo "==> KDE Webtop läuft auf http://localhost:$(PORT) (Login: ubuntu / mypasswd)"
 
 # --- Container stoppen ---
 .PHONY: stop
