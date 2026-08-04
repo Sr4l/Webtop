@@ -56,7 +56,7 @@ COPY --from=web-build /webout ./src/selkies/selkies_web
 # bundled web client in src/selkies/selkies_web reliably ends up in the wheel
 RUN python3 -m build --wheel
 
-# 3) Runtime: Ubuntu 24.04 + KDE Plasma (X11 on Xvfb) + PulseAudio + Selkies
+# 3) Runtime: Ubuntu 26.04 + KDE Plasma (X11 on Xvfb) + PulseAudio + Selkies
 FROM docker.io/library/ubuntu:26.04
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -110,6 +110,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # KDE Plasma desktop (X11 session)
     kde-plasma-desktop \
     kwin-x11 \
+    kubuntu-desktop \
+    # Locales (de_DE.UTF-8 is generated and used via LC_ALL below)
+    locales \
     # Fonts
     fonts-dejavu-core \
     fonts-liberation \
@@ -136,9 +139,19 @@ RUN echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
     && dbus-uuidgen --ensure \
     && chown ubuntu:ubuntu /tmp/runtime-ubuntu \
     && chmod 700 /tmp/runtime-ubuntu \
+    # kbuildsycoca6 (which builds the Kickoff application menu database)
+    # looks for /etc/xdg/menus/applications.menu, but plasma-workspace only
+    # ships plasma-applications.menu. Without this file the whole menu
+    # database fails to build and (newly) installed programs never show up
+    # in the menu. Same workaround as linuxserver's webtop KDE image.
+    && cp /etc/xdg/menus/plasma-applications.menu /etc/xdg/menus/applications.menu \
+    # Generate the locale referenced by LC_ALL below
+    && locale-gen de_DE.UTF-8 \
     # Disable KWin compositing: Xvfb + llvmpipe has no usable GPU compositing
     && mkdir -p /home/ubuntu/.config \
     && printf '[Compositing]\nEnabled=false\n' > /home/ubuntu/.config/kwinrc \
+    # Never lock the screen: the ubuntu user has no password to unlock with
+    && printf '[Daemon]\nAutolock=false\n' > /home/ubuntu/.config/kscreenlockerrc \
     && chown -R ubuntu:ubuntu /home/ubuntu/.config
 
 # Supervisord service stack
