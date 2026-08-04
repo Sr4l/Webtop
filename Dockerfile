@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 #
-# Ubuntu 24.04 + KDE Plasma webtop streamed by Selkies (new pixelflux/pcmflux
+# Ubuntu 26.04 + KDE Plasma webtop streamed by Selkies (new pixelflux/pcmflux
 # architecture, no GStreamer). The selkies wheel is not published to PyPI in
 # its new form, so it is built from source here exactly like upstream's own
 # Dockerfile does: stage 1 builds the HTML5 web client, stage 2 bundles it
@@ -57,10 +57,9 @@ COPY --from=web-build /webout ./src/selkies/selkies_web
 RUN python3 -m build --wheel
 
 # 3) Runtime: Ubuntu 24.04 + KDE Plasma (X11 on Xvfb) + PulseAudio + Selkies
-FROM docker.io/library/ubuntu:24.04
+FROM docker.io/library/ubuntu:26.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG TZ=UTC
 
 # Use German mirror servers for faster downloads
 RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://de.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources
@@ -125,12 +124,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     libxkbcommon-dev \
     pkg-config \
-    && PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install --no-cache-dir /tmp/wheels/*.whl \
+    && PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install --no-cache-dir --ignore-installed cryptography /tmp/wheels/*.whl \
     && apt-get purge -y --autoremove gcc python3-dev libxkbcommon-dev pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/wheels
 
-# The ubuntu:24.04 base already ships an "ubuntu" user (uid 1000); give it
+# The ubuntu:26.04 base already ships an "ubuntu" user (uid 1000); give it
 # passwordless sudo and a proper runtime dir (KDE/PulseAudio misbehave as root)
 RUN echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
     && mkdir -p /var/log/supervisor /var/run/dbus /tmp/runtime-ubuntu \
@@ -146,7 +145,8 @@ RUN echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 ENV DISPLAY=:1
-ENV TZ=UTC
+ENV TZ=UTC+2
+ENV LC_ALL=de_DE.UTF-8
 
 EXPOSE 3000
 
