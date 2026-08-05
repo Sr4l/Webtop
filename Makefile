@@ -5,7 +5,7 @@ SHM_SIZE     = 2gb
 
 # --- Standard-Target ---
 .PHONY: all
-all: clean build-base build-devenv start
+all: clean build-base build-devenv start-devenv
 
 # --- Build-Prozess ---
 .PHONY: build
