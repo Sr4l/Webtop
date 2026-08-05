@@ -1,19 +1,28 @@
 # --- Konfiguration ---
-IMAGE_NAME   = ubuntu-kde-managed
-TAG          = 26.04
 CONTAINER_NAME = ubuntu-kde-running
 PORT         = 3000
 SHM_SIZE     = 2gb
 
 # --- Standard-Target ---
 .PHONY: all
-all: clean build start
+all: clean build-base build-devenv start
 
 # --- Build-Prozess ---
 .PHONY: build
-build:
-	@echo "==> Baue Ubuntu 26.04 Docker-Image $(IMAGE_NAME):$(TAG)..."
-	docker build -t $(IMAGE_NAME):$(TAG) .
+build: build-base
+
+.PHONY: build-all
+build-all: build-base build-devenv
+
+.PHONY: build-base
+build-base:
+	@echo "==> Baue Ubuntu-KDE-Base-Image..."
+	docker build -f Dockerfile.base -t ubuntu-kde-base .
+
+.PHONY: build-devenv
+build-devenv:
+	@echo "==> Baue Ubuntu-KDE-Devenv-Image..."
+	docker build -f Dockerfile.devenv -t ubuntu-kde-devenv .
 
 # --- Container starten ---
 .PHONY: start
@@ -23,7 +32,17 @@ start:
 		--name $(CONTAINER_NAME) \
 		-p $(PORT):3000 \
 		--shm-size=$(SHM_SIZE) \
-		$(IMAGE_NAME):$(TAG)
+		ubuntu-kde-base
+	@echo "==> KDE Webtop läuft auf http://localhost:$(PORT) (Login: ubuntu / mypasswd)"
+
+.PHONY: start-devenv
+start-devenv:
+	@echo "==> Starte Container $(CONTAINER_NAME)..."
+	docker run -d \
+		--name $(CONTAINER_NAME) \
+		-p $(PORT):3000 \
+		--shm-size=$(SHM_SIZE) \
+		ubuntu-kde-devenv
 	@echo "==> KDE Webtop läuft auf http://localhost:$(PORT) (Login: ubuntu / mypasswd)"
 
 # --- Container stoppen ---
