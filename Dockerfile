@@ -13,9 +13,8 @@ ARG SELKIES_REF=main
 ARG SELKIES_MODE=webrtc
 ARG SELKIES_UPLOAD_DIR=/home/ubuntu/Desktop
 
-RUN apk add --no-cache git \
-    && git clone https://github.com/selkies-project/selkies.git /src \
-    && cd /src && git checkout "${SELKIES_REF}"
+# BuildKit clones and checks out the given branch/tag/commit directly
+ADD --keep-git-dir=false https://github.com/selkies-project/selkies.git#${SELKIES_REF} /src
 
 WORKDIR /build
 
@@ -56,60 +55,51 @@ COPY --from=web-build /webout ./src/selkies/selkies_web
 # bundled web client in src/selkies/selkies_web reliably ends up in the wheel
 RUN python3 -m build --wheel
 
-# 3) Runtime: Ubuntu 26.04 + KDE Plasma (Wayland on sway) + PipeWire + Selkies
+# 3) Runtime: Ubuntu 26.04 + KDE Plasma (Wayland on KWin) + PipeWire + Selkies
 FROM docker.io/library/ubuntu:26.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Use German mirror servers for faster downloads
-RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://de.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources
-
-# Desktop/runtime dependencies (per official docs + upstream example container)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Use German mirror servers for faster downloads. Only top-level packages are
+# listed; apt pulls in their dependencies (pipewire-bin, libpipewire-*,
+# libspa-0.2-modules, libgl1, libegl1, libxkbcommon0, xkb-data, xdg-desktop-portal,
+# python3, dbus, ...) automatically.
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://de.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources \
+    && apt-get update && apt-get install -y --no-install-recommends \
     # Base utilities
     ca-certificates \
     curl \
     jq \
     sudo \
     supervisor \
-    dbus \
     dbus-user-session \
     tzdata \
     # Python runtime
-    python3 \
     python3-pip \
-    # Wayland protocols (KWin provides Wayland compositor)
+    # Wayland protocols (KWin provides the Wayland compositor)
     wayland-protocols \
-    # Keymap and input
-    libxkbcommon0 \
-    xkb-data \
     # PipeWire for audio and screen capture (replaces PulseAudio + XShm)
     pipewire \
     pipewire-pulse \
     pipewire-alsa \
-    pipewire-bin \
     pulseaudio-utils \
     wireplumber \
     libspa-0.2-jack \
-    libspa-0.2-modules \
-    libpipewire-0.3-0t64 \
-    libpipewire-0.3-common \
-    libpipewire-0.3-modules \
     # XDG Desktop Portal for Wayland screen sharing (with KDE backend)
-    xdg-desktop-portal \
     xdg-desktop-portal-kde \
     gstreamer1.0-pipewire \
     # Software OpenGL (llvmpipe) for KDE without GPU
-    libgl1 \
     libgl1-mesa-dri \
-    libglx-mesa0 \
-    libegl1 \
     mesa-utils \
     libgbm1 \
-    # KDE Plasma desktop (Wayland session)
+    # KDE Plasma desktop (Wayland session) + volume applet and terminal
     kde-plasma-desktop \
     kwin-wayland \
-    kubuntu-desktop \
+    plasma-pa \
+    konsole \
+    systemsettings \
+    kinfocenter \
+    plasma-systemmonitor \
     # Locales (de_DE.UTF-8 is generated and used via LC_ALL below)
     locales \
     # Clipboard (xclip for X11/Xwayland, wl-clipboard for Wayland)
@@ -118,17 +108,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Fonts
     fonts-dejavu-core \
     fonts-liberation \
+    # The kwin_wayland binary ships with a cap_sys_nice file capability. Inside
+    # an unprivileged container execve then fails with "Operation not permitted"
+    # because CAP_SYS_NICE is not in the bounding set, so KWin could never start.
+    # Strip the capability (KWin only uses it for realtime scheduling and runs
+    # fine without it, printing a harmless warning) like linuxserver's webtop.
+    && setcap -r /usr/bin/kwin_wayland \
+    # udisks2 gets dbus-activated on demand and spams errors in a container
+    && rm -f /usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# The kwin_wayland binary ships with a cap_sys_nice file capability. Inside an
-# unprivileged container execve then fails with "Operation not permitted"
-# because CAP_SYS_NICE is not in the bounding set, so KWin could never start.
-# Strip the capability (KWin only uses it for realtime scheduling and runs
-# fine without it, printing a harmless warning) like linuxserver's webtop does.
-RUN setcap -r /usr/bin/kwin_wayland \
-    # udisks2 gets dbus-activated on demand and spams errors in a container
-    && rm -f /usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service
 
 # Install Selkies wheel (pulls pixelflux/pcmflux and co. from PyPI).
 # Build deps for any pip package without a prebuilt wheel are purged afterwards.
@@ -159,13 +148,18 @@ RUN echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
     && cp /etc/xdg/menus/plasma-applications.menu /etc/xdg/menus/applications.menu \
     # Generate the locale referenced by LC_ALL below
     && locale-gen de_DE.UTF-8 \
+    # Write all user config files in one go
+    && mkdir -p /home/ubuntu/.config/pipewire/pipewire.conf.d /home/ubuntu/.config/wireplumber/main.lua.d \
     # KWin compositing is disabled like in the linuxserver webtop reference:
     # the nested KWin renders into the pixelflux capture compositor which does
     # the final frame delivery, KWin-level compositing effects are not needed
-    && mkdir -p /home/ubuntu/.config \
     && printf '[Compositing]\nEnabled=false\n' > /home/ubuntu/.config/kwinrc \
     # Never lock the screen: the ubuntu user has no password to unlock with
     && printf '[Daemon]\nAutolock=false\n' > /home/ubuntu/.config/kscreenlockerrc \
+    # PipeWire config for headless audio
+    && printf 'context.properties = {\n    default.clock.rate = 48000\n    default.clock.quantum = 1024\n}\ncontext.link.max-buffers = 6\ncontext.link.max-rewind = 4096\n' > /home/ubuntu/.config/pipewire/pipewire.conf.d/99-container.conf \
+    # No ALSA hardware in the container
+    && printf 'alsa_monitor.enabled = false\n' > /home/ubuntu/.config/wireplumber/main.lua.d/99-disable-alsa.lua \
     && chown -R ubuntu:ubuntu /home/ubuntu/.config
 
 # KWin window rule so the wl-copy/wl-paste clipboard helper windows stay
@@ -173,28 +167,20 @@ RUN echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
 COPY --chown=ubuntu:ubuntu kwinrulesrc /home/ubuntu/.config/kwinrulesrc
 
 # Nested KWin launcher: pre-binds the Xwayland socket, then execs kwin_wayland
-COPY kwin-xwayland.py /usr/local/bin/kwin-xwayland.py
-RUN chmod +x /usr/local/bin/kwin-xwayland.py
+COPY --chmod=755 kwin-xwayland.py /usr/local/bin/kwin-xwayland.py
 
 # Supervisord service stack
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Setup PipeWire config for headless audio
-RUN mkdir -p /home/ubuntu/.config/pipewire/pipewire.conf.d \
-    && printf 'context.properties = {\n    default.clock.rate = 48000\n    default.clock.quantum = 1024\n}\ncontext.link.max-buffers = 6\ncontext.link.max-rewind = 4096\n' > /home/ubuntu/.config/pipewire/pipewire.conf.d/99-container.conf \
-    && mkdir -p /home/ubuntu/.config/wireplumber/main.lua.d \
-    && printf 'alsa_monitor.enabled = false\n' > /home/ubuntu/.config/wireplumber/main.lua.d/99-disable-alsa.lua \
-    && chown -R ubuntu:ubuntu /home/ubuntu/.config
-
 # wayland-0 is the nested KWin socket (apps + plasmashell), wayland-1 belongs
-# to the pixelflux capture compositor started by selkies itself
-ENV WAYLAND_DISPLAY=wayland-0
-# X11 apps go to the rootless Xwayland server started by KWin on :1
-ENV DISPLAY=:1
-# Firefox and other GTK/X apps behave best through Xwayland in this stack
-ENV MOZ_ENABLE_WAYLAND=0
-ENV TZ=UTC+2
-ENV LC_ALL=de_DE.UTF-8
+# to the pixelflux capture compositor started by selkies itself.
+# X11 apps go to the rootless Xwayland server started by KWin on :1.
+# Firefox and other GTK/X apps behave best through Xwayland in this stack.
+ENV WAYLAND_DISPLAY=wayland-0 \
+    DISPLAY=:1 \
+    MOZ_ENABLE_WAYLAND=0 \
+    TZ=Europe/Berlin \
+    LC_ALL=de_DE.UTF-8
 
 EXPOSE 3000
 
