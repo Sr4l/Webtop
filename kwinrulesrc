@@ -1,0 +1,16 @@
+[General]
+count=1
+rules=61b283b3-439f-49b5-a6a1-f20a02f81ed2
+
+[61b283b3-439f-49b5-a6a1-f20a02f81ed2]
+Description=wl-clipboard support
+wmclass=wl-(copy|paste)
+wmclassmatch=3
+skiptaskbar=true
+skiptaskbarrule=2
+skipswitcher=true
+skipswitcherrule=2
+fsplevel=3
+fsplevelrule=2
+noborder=true
+noborderrule=2

@@ -56,7 +56,7 @@ COPY --from=web-build /webout ./src/selkies/selkies_web
 # bundled web client in src/selkies/selkies_web reliably ends up in the wheel
 RUN python3 -m build --wheel
 
-# 3) Runtime: Ubuntu 26.04 + KDE Plasma (X11 on Xvfb) + PulseAudio + Selkies
+# 3) Runtime: Ubuntu 26.04 + KDE Plasma (Wayland on sway) + PipeWire + Selkies
 FROM docker.io/library/ubuntu:26.04
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -73,51 +73,62 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     supervisor \
     dbus \
-    dbus-x11 \
+    dbus-user-session \
     tzdata \
     # Python runtime
     python3 \
     python3-pip \
-    # X11 display server and utilities
-    xserver-xorg-core \
-    xvfb \
-    wmctrl \
-    x11-utils \
-    x11-xkb-utils \
-    x11-xserver-utils \
-    xauth \
-    # X11 client libraries required by pixelflux (XShm capture) and input injection
-    libx11-xcb1 \
-    libxcb1 \
-    libxcb-shm0 \
-    libxcb-xfixes0 \
-    libxcb-randr0 \
-    libxcb-dri3-0 \
+    # Wayland protocols (KWin provides Wayland compositor)
+    wayland-protocols \
+    # Keymap and input
     libxkbcommon0 \
-    libxdamage1 \
-    libxfixes3 \
-    libxtst6 \
-    libxext6 \
-    # Audio (PulseAudio server used by pcmflux through libpulse)
-    libpulse0 \
-    libopus0 \
-    pulseaudio \
-    # Software OpenGL for KDE on Xvfb (llvmpipe)
+    xkb-data \
+    # PipeWire for audio and screen capture (replaces PulseAudio + XShm)
+    pipewire \
+    pipewire-pulse \
+    pipewire-alsa \
+    pipewire-bin \
+    pulseaudio-utils \
+    wireplumber \
+    libspa-0.2-jack \
+    libspa-0.2-modules \
+    libpipewire-0.3-0t64 \
+    libpipewire-0.3-common \
+    libpipewire-0.3-modules \
+    # XDG Desktop Portal for Wayland screen sharing (with KDE backend)
+    xdg-desktop-portal \
+    xdg-desktop-portal-kde \
+    gstreamer1.0-pipewire \
+    # Software OpenGL (llvmpipe) for KDE without GPU
     libgl1 \
     libgl1-mesa-dri \
+    libglx-mesa0 \
     libegl1 \
     mesa-utils \
-    # KDE Plasma desktop (X11 session)
+    libgbm1 \
+    # KDE Plasma desktop (Wayland session)
     kde-plasma-desktop \
-    kwin-x11 \
+    kwin-wayland \
     kubuntu-desktop \
     # Locales (de_DE.UTF-8 is generated and used via LC_ALL below)
     locales \
+    # Clipboard (xclip for X11/Xwayland, wl-clipboard for Wayland)
+    xclip \
+    wl-clipboard \
     # Fonts
     fonts-dejavu-core \
     fonts-liberation \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# The kwin_wayland binary ships with a cap_sys_nice file capability. Inside an
+# unprivileged container execve then fails with "Operation not permitted"
+# because CAP_SYS_NICE is not in the bounding set, so KWin could never start.
+# Strip the capability (KWin only uses it for realtime scheduling and runs
+# fine without it, printing a harmless warning) like linuxserver's webtop does.
+RUN setcap -r /usr/bin/kwin_wayland \
+    # udisks2 gets dbus-activated on demand and spams errors in a container
+    && rm -f /usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service
 
 # Install Selkies wheel (pulls pixelflux/pcmflux and co. from PyPI).
 # Build deps for any pip package without a prebuilt wheel are purged afterwards.
@@ -133,11 +144,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* /tmp/wheels
 
 # The ubuntu:26.04 base already ships an "ubuntu" user (uid 1000); give it
-# passwordless sudo and a proper runtime dir (KDE/PulseAudio misbehave as root)
+# passwordless sudo and a proper runtime dir (KDE/PipeWire misbehave as root)
 RUN echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
-    && mkdir -p /var/log/supervisor /var/run/dbus /tmp/runtime-ubuntu \
+    && mkdir -p /var/log/supervisor /var/run/dbus /tmp/.X11-unix /tmp/runtime-ubuntu \
     && dbus-uuidgen --ensure \
-    && chown ubuntu:ubuntu /tmp/runtime-ubuntu \
+    && chown ubuntu:ubuntu /tmp/runtime-ubuntu /tmp/.X11-unix \
+    && chmod 1777 /tmp/.X11-unix \
     && chmod 700 /tmp/runtime-ubuntu \
     # kbuildsycoca6 (which builds the Kickoff application menu database)
     # looks for /etc/xdg/menus/applications.menu, but plasma-workspace only
@@ -147,17 +159,40 @@ RUN echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
     && cp /etc/xdg/menus/plasma-applications.menu /etc/xdg/menus/applications.menu \
     # Generate the locale referenced by LC_ALL below
     && locale-gen de_DE.UTF-8 \
-    # Disable KWin compositing: Xvfb + llvmpipe has no usable GPU compositing
+    # KWin compositing is disabled like in the linuxserver webtop reference:
+    # the nested KWin renders into the pixelflux capture compositor which does
+    # the final frame delivery, KWin-level compositing effects are not needed
     && mkdir -p /home/ubuntu/.config \
     && printf '[Compositing]\nEnabled=false\n' > /home/ubuntu/.config/kwinrc \
     # Never lock the screen: the ubuntu user has no password to unlock with
     && printf '[Daemon]\nAutolock=false\n' > /home/ubuntu/.config/kscreenlockerrc \
     && chown -R ubuntu:ubuntu /home/ubuntu/.config
 
+# KWin window rule so the wl-copy/wl-paste clipboard helper windows stay
+# borderless and out of the taskbar (same rule as linuxserver's webtop)
+COPY --chown=ubuntu:ubuntu kwinrulesrc /home/ubuntu/.config/kwinrulesrc
+
+# Nested KWin launcher: pre-binds the Xwayland socket, then execs kwin_wayland
+COPY kwin-xwayland.py /usr/local/bin/kwin-xwayland.py
+RUN chmod +x /usr/local/bin/kwin-xwayland.py
+
 # Supervisord service stack
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Setup PipeWire config for headless audio
+RUN mkdir -p /home/ubuntu/.config/pipewire/pipewire.conf.d \
+    && printf 'context.properties = {\n    default.clock.rate = 48000\n    default.clock.quantum = 1024\n}\ncontext.link.max-buffers = 6\ncontext.link.max-rewind = 4096\n' > /home/ubuntu/.config/pipewire/pipewire.conf.d/99-container.conf \
+    && mkdir -p /home/ubuntu/.config/wireplumber/main.lua.d \
+    && printf 'alsa_monitor.enabled = false\n' > /home/ubuntu/.config/wireplumber/main.lua.d/99-disable-alsa.lua \
+    && chown -R ubuntu:ubuntu /home/ubuntu/.config
+
+# wayland-0 is the nested KWin socket (apps + plasmashell), wayland-1 belongs
+# to the pixelflux capture compositor started by selkies itself
+ENV WAYLAND_DISPLAY=wayland-0
+# X11 apps go to the rootless Xwayland server started by KWin on :1
 ENV DISPLAY=:1
+# Firefox and other GTK/X apps behave best through Xwayland in this stack
+ENV MOZ_ENABLE_WAYLAND=0
 ENV TZ=UTC+2
 ENV LC_ALL=de_DE.UTF-8
 
