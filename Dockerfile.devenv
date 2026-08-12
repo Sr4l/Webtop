@@ -60,7 +60,7 @@ RUN apt-get install -y xvfb
 
 #use custom bashrc
 
-COPY config/bashrc /etc/skel/.bashrc
+COPY configs/bashrc /etc/skel/.bashrc
 
 # Nice desktop defaults
 # VS Code, Firefox und VLC as default apps
@@ -96,13 +96,13 @@ RUN code --install-extension h5web.vscode-h5web && \
     code --install-extension charliermarsh.ruff
 
 WORKDIR /home/ubuntu/.local/share/konsole
-COPY ["config/Profile 1.profile", "Profile 1.profile"]
+COPY ["configs/Profile 1.profile", "Profile 1.profile"]
 
 WORKDIR /home/ubuntu/.config/opencode
-COPY config/opencode.jsonc opencode.jsonc
+COPY configs/opencode.jsonc opencode.jsonc
 
 WORKDIR /home/ubuntu/.pi/agent
-COPY config/models.json models.json
+COPY configs/models.json models.json
 
 WORKDIR /home/ubuntu/
 

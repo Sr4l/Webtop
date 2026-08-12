@@ -164,10 +164,10 @@ RUN echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
 
 # KWin window rule so the wl-copy/wl-paste clipboard helper windows stay
 # borderless and out of the taskbar (same rule as linuxserver's webtop)
-COPY --chown=ubuntu:ubuntu kwinrulesrc /home/ubuntu/.config/kwinrulesrc
+COPY --chown=ubuntu:ubuntu configs/kwinrulesrc /home/ubuntu/.config/kwinrulesrc
 
 # Nested KWin launcher: pre-binds the Xwayland socket, then execs kwin_wayland
-COPY --chmod=755 kwin-xwayland.py /usr/local/bin/kwin-xwayland.py
+COPY --chmod=755 configs/kwin-xwayland.py /usr/local/bin/kwin-xwayland.py
 
 # Supervisord service stack
 COPY configs/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
