@@ -180,7 +180,8 @@ ENV WAYLAND_DISPLAY=wayland-0 \
     DISPLAY=:1 \
     MOZ_ENABLE_WAYLAND=0 \
     TZ=Europe/Berlin \
-    LC_ALL=de_DE.UTF-8
+    LC_ALL=de_DE.UTF-8 \
+    XKB_DEFAULT_LAYOUT=de
 
 EXPOSE 3000
 
