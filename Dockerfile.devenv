@@ -30,7 +30,7 @@ RUN npm install -g typescript esbuild
 
 # install vscode
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg
-COPY vscode.sources /etc/apt/sources.list.d/vscode.sources
+COPY configs/vscode.sources /etc/apt/sources.list.d/vscode.sources
 RUN apt-get update && apt-get install -y code
 RUN sed -i 's/Exec=\/usr\/share\/code\/code /Exec=\/usr\/share\/code\/code --no-sandbox /g' /usr/share/applications/code.desktop
 
@@ -46,6 +46,7 @@ RUN sed -i 's/Exec=firefox-esr /Exec=firefox-esr --marionette --remote-debugging
 WORKDIR /tmp
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt-get install -y ./google-chrome-stable_current_amd64.deb && \
+    rm google-chrome-stable_current_amd64.deb
 
 
 # dependency of pi and opencode
@@ -59,7 +60,7 @@ RUN apt-get install -y xvfb
 
 #use custom bashrc
 
-COPY bashrc /etc/skel/.bashrc
+COPY config/bashrc /etc/skel/.bashrc
 
 # Nice desktop defaults
 # VS Code, Firefox und VLC as default apps
@@ -95,13 +96,13 @@ RUN code --install-extension h5web.vscode-h5web && \
     code --install-extension charliermarsh.ruff
 
 WORKDIR /home/ubuntu/.local/share/konsole
-COPY ["Profile 1.profile", "Profile 1.profile"]
+COPY ["config/Profile 1.profile", "Profile 1.profile"]
 
 WORKDIR /home/ubuntu/.config/opencode
-COPY opencode.jsonc opencode.jsonc
+COPY config/opencode.jsonc opencode.jsonc
 
 WORKDIR /home/ubuntu/.pi/agent
-COPY models.json models.json
+COPY config/models.json models.json
 
 WORKDIR /home/ubuntu/
 

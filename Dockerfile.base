@@ -170,7 +170,7 @@ COPY --chown=ubuntu:ubuntu kwinrulesrc /home/ubuntu/.config/kwinrulesrc
 COPY --chmod=755 kwin-xwayland.py /usr/local/bin/kwin-xwayland.py
 
 # Supervisord service stack
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY configs/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # wayland-0 is the nested KWin socket (apps + plasmashell), wayland-1 belongs
 # to the pixelflux capture compositor started by selkies itself.
