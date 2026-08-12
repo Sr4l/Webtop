@@ -3,7 +3,9 @@
 # for examples
 
 export PATH="$HOME/.local/bin:$PATH"
+
 alias code="code --no-sandbox
+alias firefox="firefox --marionette --remote-debugging-port"
 
 # If not running interactively, don't do anything
 case $- in
