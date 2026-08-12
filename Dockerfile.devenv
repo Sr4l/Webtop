@@ -47,7 +47,7 @@ WORKDIR /tmp
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt-get install -y ./google-chrome-stable_current_amd64.deb && \
     rm google-chrome-stable_current_amd64.deb
-RUN sed -i 's/Exec=google-chrome-stable /Exec=google-chrome-stable --no-sandbox /g' /usr/share/applications/google-chrome.desktop
+RUN sed -i 's/Exec=\/usr\/bin\/google-chrome-stable /Exec=\/usr\/bin\/google-chrome-stable --no-sandbox /g' /usr/share/applications/google-chrome.desktop
 
 
 # dependency of pi and opencode
