@@ -40,13 +40,14 @@ RUN apt-get install -y vlc gimp inkscape libreoffice software-properties-common
 # install firefox
 RUN add-apt-repository -y ppa:mozillateam/ppa
 RUN apt-get update && apt-get install -y firefox-esr
-RUN sed -i 's/Exec=firefox-esr /Exec=firefox-esr --marionette --remote-debugging-port /g' /usr/share/applications/code.desktop
+RUN sed -i 's/Exec=firefox-esr /Exec=firefox-esr --marionette --remote-debugging-port /g' /usr/share/applications/firefox-esr.desktop
 
 # install chrome
 WORKDIR /tmp
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt-get install -y ./google-chrome-stable_current_amd64.deb && \
     rm google-chrome-stable_current_amd64.deb
+RUN sed -i 's/Exec=google-chrome-stable /Exec=google-chrome-stable --no-sandbox /g' /usr/share/applications/google-chrome.desktop
 
 
 # dependency of pi and opencode
@@ -61,20 +62,6 @@ RUN apt-get install -y xvfb
 #use custom bashrc
 
 COPY configs/bashrc /etc/skel/.bashrc
-
-# Nice desktop defaults
-# VS Code, Firefox und VLC as default apps
-# RUN set -e; \
-#     for mime in text/plain text/markdown application/x-shellscript; do \
-#         xdg-mime default code.desktop "$mime"; \
-#     done; \
-#     for mime in application/pdf text/html x-scheme-handler/http x-scheme-handler/https; do \
-#         xdg-mime default firefox.desktop "$mime"; \
-#     done; \
-#     for mime in video/mp4 video/x-matroska audio/mpeg audio/x-wav; do \
-#         xdg-mime default vlc.desktop "$mime"; \
-#     done
-
 
 USER ubuntu
 WORKDIR /home/ubuntu

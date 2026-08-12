@@ -6,6 +6,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 alias code="code --no-sandbox
 alias firefox="firefox --marionette --remote-debugging-port"
+alias google-chrome="google-chrome --no-sandbox
 
 # If not running interactively, don't do anything
 case $- in
