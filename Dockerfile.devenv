@@ -1,65 +1,66 @@
 FROM ubuntu-kde-base
 
 # Prevent interactive prompts during build
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Update system
 RUN apt-get update && \
-    apt-get upgrade -y && \
     apt-get dist-upgrade -y && \
-    apt-get clean
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container to /app
-# RUN useradd -ms /bin/bash user && usermod -aG sudo user && echo "user:userpw" | chpasswd
-
-# install useful os stuff
-RUN apt-get install -y curl wget ca-certificates gnupg bash-completion vim nano ansible git git-lfs make zsh sudo htop btop ffmpeg
-
-# python dev env
-RUN apt-get install -y python3 python3-dev python3-pip python3-venv python3-tk python3-pyqt6 \
+# Batch 1: System tools, Python dev, C++/Rust dev, misc deps
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl wget ca-certificates gnupg bash-completion vim nano ansible git git-lfs make zsh sudo htop btop ffmpeg \
+    python3 python3-dev python3-pip python3-venv python3-tk python3-pyqt6 \
     python3-flask python3-requests mypy python3-pytest python3-numpy python3-pandas \
-    python3-matplotlib python3-scipy
-RUN python3 -m pip install --break-system-packages uv ruff
+    python3-matplotlib python3-scipy \
+    build-essential clang rust-all cmake ninja-build \
+    ripgrep fd-find \
+    xvfb \
+    && python3 -m pip install --break-system-packages --no-cache-dir uv ruff \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# C++ and rust dev env
-RUN apt-get install -y build-essential clang rust-all cmake ninja-build wget curl
+# Batch 2: JS dev, VS Code, browsers, desktop apps
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nodejs npm \
+    && npm install -g typescript esbuild @earendil-works/pi-coding-agent opencode-ai \
+    && npm cache clean --force \
+    && wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# JS dev env (global, we have nodesource.list to have newer versions than debian)
-RUN apt-get install -y nodejs npm
-RUN npm install -g typescript esbuild
-
-# install vscode
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg
 COPY configs/vscode.sources /etc/apt/sources.list.d/vscode.sources
-RUN apt-get update && apt-get install -y code
-RUN sed -i 's/Exec=\/usr\/share\/code\/code /Exec=\/usr\/share\/code\/code --no-sandbox /g' /usr/share/applications/code.desktop
 
-# install some desktop apps
-RUN apt-get install -y vlc gimp inkscape libreoffice software-properties-common
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends code \
+    && sed -i 's/Exec=\/usr\/share\/code\/code /Exec=\/usr\/share\/code\/code --no-sandbox /g' /usr/share/applications/code.desktop \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# install firefox
-RUN add-apt-repository -y ppa:mozillateam/ppa
-RUN apt-get update && apt-get install -y firefox-esr
-RUN sed -i 's/Exec=firefox-esr /Exec=firefox-esr --marionette --remote-debugging-port /g' /usr/share/applications/firefox-esr.desktop
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends vlc gimp inkscape libreoffice software-properties-common \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# install chrome
+# Firefox
+RUN add-apt-repository -y ppa:mozillateam/ppa && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends firefox-esr \
+    && sed -i 's/Exec=firefox-esr /Exec=firefox-esr --marionette --remote-debugging-port /g' /usr/share/applications/firefox-esr.desktop \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Chrome
 WORKDIR /tmp
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    apt-get install -y ./google-chrome-stable_current_amd64.deb && \
-    rm google-chrome-stable_current_amd64.deb
-RUN sed -i 's/Exec=\/usr\/bin\/google-chrome-stable /Exec=\/usr\/bin\/google-chrome-stable --no-sandbox /g' /usr/share/applications/google-chrome.desktop
-
-
-# dependency of pi and opencode
-RUN apt-get install -y ripgrep fd-find
-RUN npm install -g @earendil-works/pi-coding-agent
-RUN npm install -g opencode-ai
-
-# run gui programs headless
-RUN apt-get install -y xvfb
-
-
-#use custom bashrc
+    apt-get install -y --no-install-recommends ./google-chrome-stable_current_amd64.deb && \
+    rm google-chrome-stable_current_amd64.deb && \
+    sed -i 's/Exec=\/usr\/bin\/google-chrome-stable /Exec=\/usr\/bin\/google-chrome-stable --no-sandbox /g' /usr/share/applications/google-chrome.desktop && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 USER ubuntu
 WORKDIR /home/ubuntu
