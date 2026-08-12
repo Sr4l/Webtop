@@ -61,10 +61,10 @@ RUN apt-get install -y xvfb
 
 #use custom bashrc
 
-COPY configs/bashrc /etc/skel/.bashrc
-
 USER ubuntu
 WORKDIR /home/ubuntu
+COPY configs/bashrc .bashrc
+
 RUN git config --global credential.helper store && \
     git config --global user.name "mrt_user" && \
     git config --global user.email "noemail@mrt.uni-kassel.de" && \
