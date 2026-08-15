@@ -8,8 +8,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BASE_IMAGE: ubuntu-kde-base
-  DEVENV_IMAGE: ubuntu-kde-devenv
+  BASE_IMAGE_NAME: ubuntu-kde-base
+  DEVENV_IMAGE_NAME: ubuntu-kde-devenv
 
 jobs:
   build-base:
@@ -20,20 +20,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
-        run: docker build -f Dockerfile.base -t ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BASE_IMAGE }}:${{ github.sha }} .
-      - name: Tag + Push
-        if: github.event_name != 'pull_request'
         run: |
-          docker tag ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BASE_IMAGE }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BASE_IMAGE }}:latest
-          docker push ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BASE_IMAGE }}:${{ github.sha }}
-          docker push ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BASE_IMAGE }}:latest
+          REPO="${GITHUB_REPOSITORY,,}"
+          docker build -f Dockerfile.base -t ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:${GITHUB_SHA} .
+      - name: Tag + Push
+        run: |
+          REPO="${GITHUB_REPOSITORY,,}"
+          docker tag ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:${GITHUB_SHA} ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:latest
+          docker push ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:${GITHUB_SHA}
+          docker push ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:latest
+        if: github.event_name != 'pull_request'
 
   build-devenv:
     needs: build-base
@@ -44,26 +45,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull base image
-        if: github.event_name != 'pull_request'
-        run: docker pull ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BASE_IMAGE }}:${{ github.sha }}
       - name: Build
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            docker build -f Dockerfile.base -t ubuntu-kde-base .
-          fi
-          docker build -f Dockerfile.devenv \
-            --build-arg BASE_IMAGE=${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BASE_IMAGE }}:${{ github.sha }} \
-            -t ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.DEVENV_IMAGE }}:${{ github.sha }} .
+          REPO="${GITHUB_REPOSITORY,,}"
+          docker build -f Dockerfile.devenv --build-arg BASE_IMAGE=${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:${GITHUB_SHA} -t ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:${GITHUB_SHA} .
       - name: Tag + Push
-        if: github.event_name != 'pull_request'
         run: |
-          docker tag ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.DEVENV_IMAGE }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.DEVENV_IMAGE }}:latest
-          docker push ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.DEVENV_IMAGE }}:${{ github.sha }}
-          docker push ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.DEVENV_IMAGE }}:latest
+          REPO="${GITHUB_REPOSITORY,,}"
+          docker tag ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:${GITHUB_SHA} ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:latest
+          docker push ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:${GITHUB_SHA}
+          docker push ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:latest
+        if: github.event_name != 'pull_request'
