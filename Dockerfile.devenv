@@ -1,4 +1,5 @@
-FROM ubuntu-kde-base
+ARG BASE_IMAGE=ubuntu-kde-base
+FROM ${BASE_IMAGE}
 
 # Prevent interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive

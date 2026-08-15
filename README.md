@@ -15,11 +15,36 @@ Browser ←→ Selkies (WebSocket/WebRTC) ←→ pixelflux (wayland-1) ←→ ne
 
 ## Quick Start
 
+### Option 1: Pre-built image from GitHub (recommended)
+
 ```bash
-make
+# Log in to GitHub Container Registry
+docker login ghcr.io
+
+# Pull and run the latest image
+docker run -d \
+  --name ubuntu-kde-running \
+  -p 3000:3000 \
+  --shm-size=2gb \
+  ghcr.io/sr4l/webtop/ubuntu-kde-devenv:latest
 ```
 
-This builds the base image and starts the container. Access the desktop at `http://localhost:3000` (login: `ubuntu` / `mypasswd`).
+Access the desktop at `http://localhost:3000` (login: `ubuntu` / `mypasswd`).
+
+### Option 2: Build locally
+
+```bash
+# Build base image
+make build-base
+
+# Build full development environment
+make build-devenv
+
+# Start the container
+make start-devenv
+```
+
+Access the desktop at `http://localhost:3000` (login: `ubuntu` / `mypasswd`).
 
 ### Makefile Targets
 
