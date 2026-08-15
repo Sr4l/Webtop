@@ -20,8 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
         with:
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
@@ -29,12 +31,12 @@ jobs:
           REPO="${GITHUB_REPOSITORY,,}"
           docker build -f Dockerfile.base -t ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:${GITHUB_SHA} .
       - name: Tag + Push
+        if: github.event_name != 'pull_request'
         run: |
           REPO="${GITHUB_REPOSITORY,,}"
           docker tag ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:${GITHUB_SHA} ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:latest
           docker push ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:${GITHUB_SHA}
           docker push ${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:latest
-        if: github.event_name != 'pull_request'
 
   build-devenv:
     needs: build-base
@@ -45,8 +47,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
         with:
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
@@ -54,9 +58,9 @@ jobs:
           REPO="${GITHUB_REPOSITORY,,}"
           docker build -f Dockerfile.devenv --build-arg BASE_IMAGE=${REGISTRY}/${REPO}/${{ env.BASE_IMAGE_NAME }}:${GITHUB_SHA} -t ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:${GITHUB_SHA} .
       - name: Tag + Push
+        if: github.event_name != 'pull_request'
         run: |
           REPO="${GITHUB_REPOSITORY,,}"
           docker tag ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:${GITHUB_SHA} ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:latest
           docker push ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:${GITHUB_SHA}
           docker push ${REGISTRY}/${REPO}/${{ env.DEVENV_IMAGE_NAME }}:latest
-        if: github.event_name != 'pull_request'
