@@ -96,6 +96,8 @@ COPY configs/models.json models.json
 
 WORKDIR /home/ubuntu/
 
+COPY tasks /home/ubuntu/tasks
+
 USER root
 
 # Set up webtop configuration
