@@ -100,6 +100,8 @@ RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://de.archive.ubuntu.com/ubu
     systemsettings \
     kinfocenter \
     plasma-systemmonitor \
+    # Required to strip capabilities from kwin_wayland; purged later
+    libcap2-bin \
     # Locales (de_DE.UTF-8 is generated and used via LC_ALL below)
     locales \
     # Clipboard (xclip for X11/Xwayland, wl-clipboard for Wayland)
@@ -114,10 +116,9 @@ RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://de.archive.ubuntu.com/ubu
     # Strip the capability (KWin only uses it for realtime scheduling and runs
     # fine without it, printing a harmless warning) like linuxserver's webtop.
     && setcap -r /usr/bin/kwin_wayland \
+    && rm -rf /var/lib/apt/lists/* && apt-get clean \
     # udisks2 gets dbus-activated on demand and spams errors in a container
-    && rm -f /usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -f /usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service
 
 # Install Selkies wheel (pulls pixelflux/pcmflux and co. from PyPI).
 # Build deps for any pip package without a prebuilt wheel are purged afterwards.
