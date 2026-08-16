@@ -61,3 +61,15 @@ clean: stop
 .PHONY: logs
 logs:
 	docker logs -f $(CONTAINER_NAME)
+
+# --- Image exportieren/importieren ---
+.PHONY: export-image
+export-image:
+	@echo "==> Exportiere ubuntu-kde-devenv Image..."
+	docker save ubuntu-kde-devenv -o ubuntu-kde-devenv.tar
+
+.PHONY: import-image
+import-image:
+	@echo "==> Importiere ubuntu-kde-devenv Image..."
+	docker load -i ubuntu-kde-devenv.tar
+
