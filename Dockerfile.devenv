@@ -82,7 +82,8 @@ RUN code --install-extension h5web.vscode-h5web && \
     code --install-extension ms-vscode.cpptools && \
     code --install-extension ms-python.python && \
     code --install-extension ms-toolsai.jupyter && \
-    code --install-extension charliermarsh.ruff
+    code --install-extension charliermarsh.ruff && \
+    code --install-extension saoudrizwan.claude-dev
 
 WORKDIR /home/ubuntu/.local/share/konsole
 COPY ["configs/Profile 1.profile", "Profile 1.profile"]
