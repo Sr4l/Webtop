@@ -37,7 +37,7 @@ RUN apt-get update && \
 
 # Batch 2: JS dev, VS Code, browsers, desktop apps
 RUN apt-get update && \
-    apt-get install -y nodejs npm \
+    apt-get install -y --no-install-recommends nodejs npm \
     && npm install -g typescript esbuild @earendil-works/pi-coding-agent opencode-ai \
     && npm cache clean --force \
     && wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg \
@@ -47,13 +47,13 @@ RUN apt-get update && \
 COPY configs/vscode.sources /etc/apt/sources.list.d/vscode.sources
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends code \
+    apt-get install -y code \
     && sed -i 's/Exec=\/usr\/share\/code\/code /Exec=\/usr\/share\/code\/code --no-sandbox /g' /usr/share/applications/code.desktop \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y vlc gimp inkscape libreoffice software-properties-common gummi okular gwenview geany kate \
+    apt-get install -y --no-install-recommends vlc gimp inkscape libreoffice software-properties-common gummi okular gwenview geany kate \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
