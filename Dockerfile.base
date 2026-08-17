@@ -65,7 +65,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # libspa-0.2-modules, libgl1, libegl1, libxkbcommon0, xkb-data, xdg-desktop-portal,
 # python3, dbus, ...) automatically.
 RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://de.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources \
-    && apt-get update && apt-get install -y --no-install-recommends \
+    && apt-get update && apt-get install -y \
     # Base utilities
     ca-certificates \
     curl \
@@ -94,6 +94,7 @@ RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://de.archive.ubuntu.com/ubu
     libgbm1 \
     # KDE Plasma desktop (Wayland session) + volume applet and terminal
     kde-plasma-desktop \
+    language-pack-de \
     kwin-wayland \
     plasma-pa \
     konsole \
@@ -180,6 +181,7 @@ COPY configs/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ENV WAYLAND_DISPLAY=wayland-0 \
     DISPLAY=:1 \
     MOZ_ENABLE_WAYLAND=0 \
+    OZONE_PLATFORM=x11 \
     TZ=Europe/Berlin \
     LC_ALL=de_DE.UTF-8 \
     XKB_DEFAULT_LAYOUT=de

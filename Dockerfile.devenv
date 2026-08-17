@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ubuntu-kde-base
+ARG BASE_IMAGE=sr4l/webtop-ubuntu-kde-base
 FROM ${BASE_IMAGE}
 
 # Prevent interactive prompts during build
@@ -37,7 +37,7 @@ RUN apt-get update && \
 
 # Batch 2: JS dev, VS Code, browsers, desktop apps
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends nodejs npm \
+    apt-get install -y nodejs npm \
     && npm install -g typescript esbuild @earendil-works/pi-coding-agent opencode-ai \
     && npm cache clean --force \
     && wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg \
@@ -53,14 +53,14 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends vlc gimp inkscape libreoffice software-properties-common gummi \
+    apt-get install -y vlc gimp inkscape libreoffice software-properties-common gummi okular gwenview geany kate \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Firefox
 RUN add-apt-repository -y ppa:mozillateam/ppa && \
     apt-get update && \
-    apt-get install -y --no-install-recommends firefox-esr \
+    apt-get install -y firefox-esr \
     && sed -i 's/Exec=firefox-esr /Exec=firefox-esr --marionette --remote-debugging-port /g' /usr/share/applications/firefox-esr.desktop \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -68,7 +68,7 @@ RUN add-apt-repository -y ppa:mozillateam/ppa && \
 # Chrome
 WORKDIR /tmp
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    apt-get install -y --no-install-recommends ./google-chrome-stable_current_amd64.deb && \
+    apt-get install -y ./google-chrome-stable_current_amd64.deb && \
     rm google-chrome-stable_current_amd64.deb && \
     sed -i 's/Exec=\/usr\/bin\/google-chrome-stable /Exec=\/usr\/bin\/google-chrome-stable --no-sandbox /g' /usr/share/applications/google-chrome.desktop && \
     apt-get clean && \

@@ -18,15 +18,12 @@ Browser ←→ Selkies (WebSocket/WebRTC) ←→ pixelflux (wayland-1) ←→ ne
 ### Option 1: Pre-built image from GitHub (recommended)
 
 ```bash
-# Log in to GitHub Container Registry
-docker login ghcr.io
-
 # Pull and run the latest image
 docker run -d \
   --name ubuntu-kde-running \
   -p 3000:3000 \
   --shm-size=2gb \
-  ghcr.io/sr4l/webtop/ubuntu-kde-devenv:latest
+sr4l/webtop-ubuntu-kde-devenv:latest
 ```
 
 Access the desktop at `http://localhost:3000` (login: `ubuntu` / `mypasswd`).
@@ -58,6 +55,9 @@ Access the desktop at `http://localhost:3000` (login: `ubuntu` / `mypasswd`).
 | `make stop` | Stop running container |
 | `make clean` | Stop and remove container |
 | `make logs` | Follow container logs |
+| `make push` | Push both images to Docker Hub |
+| `make push-base` | Push only base image to Docker Hub |
+| `make push-devenv` | Push only devenv image to Docker Hub |
 
 ## Configuration
 
@@ -66,6 +66,23 @@ Settable via Makefile variables:
 - `PORT` — Host port to expose (default: `3000`)
 - `CONTAINER_NAME` — Container name (default: `ubuntu-kde-running`)
 - `SHM_SIZE` — Shared memory size (default: `2gb`)
+
+## Push to Docker Hub
+
+After building, push your images to Docker Hub:
+
+```bash
+make push
+```
+
+This pushes both `sr4l/webtop-ubuntu-kde-base` and `sr4l/webtop-ubuntu-kde-devenv`.
+
+You can also push individual images:
+
+```bash
+make push-base
+make push-devenv
+```
 
 ## Stack
 

@@ -1,7 +1,9 @@
 # --- Konfiguration ---
 CONTAINER_NAME = ubuntu-kde-running
 PORT         = 3000
-SHM_SIZE     = 2gb
+SHM_SIZE     = 4gb
+CPU_COUNT    = 4
+MEMORY_LIMIT = 8g
 
 # --- Standard-Target ---
 .PHONY: all
@@ -17,12 +19,12 @@ build-all: build-base build-devenv
 .PHONY: build-base
 build-base:
 	@echo "==> Baue Ubuntu-KDE-Base-Image..."
-	docker build -f Dockerfile.base -t ubuntu-kde-base .
+	docker build -f Dockerfile.base -t sr4l/webtop-ubuntu-kde-base .
 
 .PHONY: build-devenv
 build-devenv:
 	@echo "==> Baue Ubuntu-KDE-Devenv-Image..."
-	docker build -f Dockerfile.devenv -t ubuntu-kde-devenv .
+	docker build -f Dockerfile.devenv -t sr4l/webtop-ubuntu-kde-devenv .
 
 # --- Container starten ---
 .PHONY: start
@@ -32,7 +34,7 @@ start:
 		--name $(CONTAINER_NAME) \
 		-p $(PORT):3000 \
 		--shm-size=$(SHM_SIZE) \
-		ubuntu-kde-base
+		sr4l/webtop-ubuntu-kde-base
 	@echo "==> KDE Webtop läuft auf http://localhost:$(PORT) (Login: ubuntu / mypasswd)"
 
 .PHONY: start-devenv
@@ -42,7 +44,10 @@ start-devenv:
 		--name $(CONTAINER_NAME) \
 		-p $(PORT):3000 \
 		--shm-size=$(SHM_SIZE) \
-		ubuntu-kde-devenv
+		--cpus=$(CPU_COUNT) \
+		--memory=$(MEMORY_LIMIT) \
+		--device /dev/dri:/dev/dri \
+		sr4l/webtop-ubuntu-kde-devenv
 	@echo "==> KDE Webtop läuft auf http://localhost:$(PORT) (Login: ubuntu / mypasswd)"
 
 # --- Container stoppen ---
@@ -65,11 +70,25 @@ logs:
 # --- Image exportieren/importieren ---
 .PHONY: export-image
 export-image:
-	@echo "==> Exportiere ubuntu-kde-devenv Image..."
-	docker save ubuntu-kde-devenv -o ubuntu-kde-devenv.tar
+	@echo "==> Exportiere sr4l/webtop-ubuntu-kde-devenv Image..."
+	docker save sr4l/webtop-ubuntu-kde-devenv -o sr4l-webtop-ubuntu-kde-devenv.tar
 
 .PHONY: import-image
 import-image:
-	@echo "==> Importiere ubuntu-kde-devenv Image..."
-	docker load -i ubuntu-kde-devenv.tar
+	@echo "==> Importiere sr4l/webtop-ubuntu-kde-devenv Image..."
+	docker load -i sr4l-webtop-ubuntu-kde-devenv.tar
+
+# --- Push to Docker Hub ---
+.PHONY: push-base
+push-base:
+	@echo "==> Pushe sr4l/webtop-ubuntu-kde-base zu Docker Hub..."
+	docker push sr4l/webtop-ubuntu-kde-base:latest
+
+.PHONY: push-devenv
+push-devenv:
+	@echo "==> Pushe sr4l/webtop-ubuntu-kde-devenv zu Docker Hub..."
+	docker push sr4l/webtop-ubuntu-kde-devenv:latest
+
+.PHONY: push
+push: push-base push-devenv
 
