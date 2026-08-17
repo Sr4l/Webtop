@@ -1,6 +1,6 @@
-# ubuntu-kde-webtop
+# kde-webtop
 
-Ubuntu 26.04 + KDE Plasma webtop streamed in the browser via [Selkies](https://github.com/selkies-project/selkies). Runs KWin nested on top of the pixelflux capture compositor inside a Docker container.
+KDE Plasma webtop streamed in the browser via [Selkies](https://github.com/selkies-project/selkies). Runs KWin nested on top of the pixelflux capture compositor inside a Docker container.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ docker run -d \
 sr4l/webtop-ubuntu-kde-devenv:latest
 ```
 
-Access the desktop at `http://localhost:3000` (login: `ubuntu` / `mypasswd`).
+Access the desktop at `http://localhost:3000`.
 
 ### Option 2: Build locally
 
@@ -41,7 +41,7 @@ make build-devenv
 make start-devenv
 ```
 
-Access the desktop at `http://localhost:3000` (login: `ubuntu` / `mypasswd`).
+Access the desktop at `http://localhost:3000`.
 
 ### Makefile Targets
 
