@@ -28,7 +28,7 @@ RUN apt-get update && \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     texlive texlive-latex-recommended texlive-latex-extra \
-    texlive-fonts-recommended texlive-fonts-extra \
+    texlive-fonts-recommended \
     texlive-pictures \
     texlive-lang-german \
     latexmk \
@@ -53,7 +53,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends vlc gimp inkscape libreoffice software-properties-common gummi okular gwenview geany kate \
+    apt-get install -y --no-install-recommends vlc gimp inkscape libreoffice-calc libreoffice-writer software-properties-common gummi okular gwenview geany kate \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -66,13 +66,13 @@ RUN add-apt-repository -y ppa:mozillateam/ppa && \
     && rm -rf /var/lib/apt/lists/*
 
 # Chrome
-WORKDIR /tmp
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    apt-get install -y ./google-chrome-stable_current_amd64.deb && \
-    rm google-chrome-stable_current_amd64.deb && \
-    sed -i 's/Exec=\/usr\/bin\/google-chrome-stable /Exec=\/usr\/bin\/google-chrome-stable --no-sandbox /g' /usr/share/applications/google-chrome.desktop && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# WORKDIR /tmp
+# RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+#     apt-get install -y ./google-chrome-stable_current_amd64.deb && \
+#     rm google-chrome-stable_current_amd64.deb && \
+#     sed -i 's/Exec=\/usr\/bin\/google-chrome-stable /Exec=\/usr\/bin\/google-chrome-stable --no-sandbox /g' /usr/share/applications/google-chrome.desktop && \
+#     apt-get clean && \
+#     rm -rf /var/lib/apt/lists/*
 
 USER ubuntu
 WORKDIR /home/ubuntu
