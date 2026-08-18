@@ -112,8 +112,8 @@
             "output": 65536
           }
         },
-        "deepseek-v4-flash": {
-          "name": "Deepseek-v4-flash",
+        "deepseek-v4-flash-0731": {
+          "name": "Deepseek-v4-flash-0731",
           "cost": {
             "input": 0.09,
             "output": 0.18
