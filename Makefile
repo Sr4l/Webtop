@@ -35,7 +35,7 @@ start:
 		-p $(PORT):3000 \
 		--shm-size=$(SHM_SIZE) \
 		sr4l/webtop-ubuntu-kde-base
-	@echo "==> KDE Webtop läuft auf http://localhost:$(PORT) (Login: ubuntu / mypasswd)"
+	@echo "==> KDE Webtop läuft auf http://localhost:$(PORT)"
 
 .PHONY: start-devenv
 start-devenv:
@@ -48,7 +48,7 @@ start-devenv:
 		--memory=$(MEMORY_LIMIT) \
 		--device /dev/dri:/dev/dri \
 		sr4l/webtop-ubuntu-kde-devenv
-	@echo "==> KDE Webtop läuft auf http://localhost:$(PORT) (Login: ubuntu / mypasswd)"
+	@echo "==> KDE Webtop läuft auf http://localhost:$(PORT)"
 
 # --- Container stoppen ---
 .PHONY: stop
