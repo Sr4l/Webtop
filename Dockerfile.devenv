@@ -104,6 +104,9 @@ COPY ["configs/Profile 1.profile", "Profile 1.profile"]
 WORKDIR /home/ubuntu/.config/opencode
 COPY configs/opencode.jsonc opencode.jsonc
 
+WORKDIR /home/ubuntu/.vscode
+COPY configs/argv.json argv.json
+
 WORKDIR /home/ubuntu/.pi/agent
 COPY configs/models.json models.json
 
@@ -112,7 +115,7 @@ WORKDIR /home/ubuntu/
 COPY tasks tasks
 
 USER root
-RUN chown -R ubuntu:ubuntu /home/ubuntu/tasks
+RUN chown -R ubuntu:ubuntu /home/ubuntu
 
 # Set up webtop configuration
 EXPOSE 3000

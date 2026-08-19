@@ -8,6 +8,8 @@ alias code="code --no-sandbox"
 alias firefox="firefox-esr --marionette --remote-debugging-port"
 alias google-chrome="google-chrome --no-sandbox"
 
+export VSCODE_UPDATE_SERVICE_DISABLED=1
+
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
