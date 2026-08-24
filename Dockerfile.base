@@ -9,7 +9,10 @@
 # 1) Build the web client (core + dashboard + keyboard-layout DB + touch gamepad)
 FROM docker.io/library/node:22-alpine AS web-build
 
-ARG SELKIES_REF=main
+# Pinned to a known-good main commit so the pixelflux/pcmflux fork-wheel
+# pairing (runtime stage) and the input_handler.py patch (py-build stage)
+# stay reproducible; bump deliberately. main @ 2026-08-19
+ARG SELKIES_REF=61f9dd57fe1e133dec2180e9cf21948eb16d8b7f
 ARG SELKIES_MODE=webrtc
 ARG SELKIES_UPLOAD_DIR=/home/ubuntu/Desktop
 
@@ -50,6 +53,15 @@ COPY --from=web-build /src/src ./src
 COPY --from=web-build /src/README.md /src/pyproject.toml ./
 # Include the production built web files in the wheel package
 COPY --from=web-build /webout ./src/selkies/selkies_web
+
+# Patch input_handler.py: inject unicode keysyms the seat keymap resolves
+# (umlauts on a de seat) through the pixelflux seat as real key events
+# instead of the app-compositor text batch (KWin has no
+# zwp_virtual_keyboard_manager_v1, so umlauts would otherwise be clipboard
+# pastes), and stop upstream swallowing their key-up (stuck keys). Fails the
+# build if the anchor text drifted from the pinned SELKIES_REF.
+COPY configs/patch_selkies_umlauts.py /tmp/patch_selkies_umlauts.py
+RUN python3 /tmp/patch_selkies_umlauts.py src/selkies/input_handler.py
 
 # Build the wheel directly from the source tree (no sdist round-trip) so the
 # bundled web client in src/selkies/selkies_web reliably ends up in the wheel
@@ -121,7 +133,8 @@ RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://de.archive.ubuntu.com/ubu
     # udisks2 gets dbus-activated on demand and spams errors in a container
     && rm -f /usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service
 
-# Install Selkies wheel (pulls pixelflux/pcmflux and co. from PyPI).
+# Install Selkies wheel (pulls pixelflux/pcmflux and co. from PyPI; both are
+# overridden by the newer fork wheels in the next step).
 # Build deps for any pip package without a prebuilt wheel are purged afterwards.
 COPY --from=py-build /opt/pypi/dist/*.whl /tmp/wheels/
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -133,6 +146,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get purge -y --autoremove gcc python3-dev libxkbcommon-dev pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/wheels
+
+# pixelflux/pcmflux from the selkies-project forks' prebuilt wheels, NOT PyPI:
+# PyPI 2.0.0 predates the app-compositor client API (type_text_wayland,
+# clipboard_*_app, set_xkb_layout, ...) that selkies main calls in nested
+# sessions like ours (KWin on wayland-0 captured by pixelflux on wayland-1).
+# With 2.0.0 those calls raise AttributeError inside selkies' fallback ladder,
+# so umlaut-class keys and the browser<->session clipboard die silently.
+# Upstream CI pairs selkies main with these forks the same way. Pinned by
+# GitHub release tag; PYTAG resolves to the image's Python (cp314 on 26.04).
+ARG PIXELFLUX_WHEEL_REF=f9d49bf
+ARG PIXELFLUX_VERSION=2.1.0
+ARG PCMFLUX_WHEEL_REF=a25781b
+ARG PCMFLUX_VERSION=2.1.0
+RUN set -eux; \
+    PYTAG="cp$(python3 -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')"; \
+    mkdir -p /tmp/fork-wheels && cd /tmp/fork-wheels; \
+    curl -fsSLO "https://github.com/selkies-project/pixelflux/releases/download/${PIXELFLUX_WHEEL_REF}/pixelflux-${PIXELFLUX_VERSION}-${PYTAG}-${PYTAG}-manylinux_2_28_x86_64.whl"; \
+    curl -fsSLO "https://github.com/selkies-project/pcmflux/releases/download/${PCMFLUX_WHEEL_REF}/pcmflux-${PCMFLUX_VERSION}-${PYTAG}-${PYTAG}-manylinux_2_28_x86_64.whl"; \
+    PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install --no-cache-dir --force-reinstall --no-deps ./pixelflux-*.whl ./pcmflux-*.whl; \
+    cd / && rm -rf /tmp/fork-wheels
 
 # The ubuntu:26.04 base already ships an "ubuntu" user (uid 1000); give it
 # passwordless sudo and a proper runtime dir (KDE/PipeWire misbehave as root)
