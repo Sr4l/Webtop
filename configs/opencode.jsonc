@@ -112,6 +112,38 @@
             "output": 65536
           }
         },
+        "qwen3.8-27b" : {
+          "name": "Qwen 3.8 27B",
+          "cost": {
+            "input": 0.35,
+            "output": 2.75
+          },
+          "modalities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          }
+        },
+        "qwen3.8-35b-a3b" : {
+          "name": "Qwen 3.8 35B A3B",
+          "cost": {
+            "input": 0.10,
+            "output": 0.95
+          },
+          "modalities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          }
+        },
         "deepseek-v4-flash-0731": {
           "name": "Deepseek-v4-flash-0731",
           "cost": {

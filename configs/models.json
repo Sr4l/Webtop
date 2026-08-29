@@ -3,17 +3,16 @@
     "chatai": {
       "baseUrl": "https://chat-ai.academiccloud.de/v1",
       "api": "openai-completions",
-      "apiKey": "YOUR_API_KEY",
       "models": [
         {
           "id": "qwen3.5-397b-a17b",
           "reasoning": false,
           "input": ["text", "image"],
           "contextWindow": 262144,
-          "maxTokens": 16384,
+          "maxTokens": 65536,
           "cost": {
-            "input": 5,
-            "output": 25,
+            "input": 0.39,
+            "output": 2.45,
             "cacheRead": 0,
             "cacheWrite": 0
           }
@@ -23,10 +22,10 @@
           "reasoning": false,
           "input": ["text", "image"],
           "contextWindow": 262144,
-          "maxTokens": 16384,
+          "maxTokens": 65536,
           "cost": {
-            "input": 0.2,
-            "output": 1.5,
+            "input": 0.28,
+            "output": 1.99,
             "cacheRead": 0,
             "cacheWrite": 0
           }
@@ -36,10 +35,36 @@
           "reasoning": false,
           "input": ["text", "image"],
           "contextWindow": 262144,
-          "maxTokens": 16384,
+          "maxTokens": 65536,
           "cost": {
-            "input": 0.2,
-            "output": 1.5,
+            "input": 0.1,
+            "output": 0.95,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "id": "qwen3.8-27b",
+          "reasoning": false,
+          "input": ["text", "image"],
+          "contextWindow": 262144,
+          "maxTokens": 65536,
+          "cost": {
+            "input": 0.35,
+            "output": 2.75,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "id": "qwen3.8-35b-a3b",
+          "reasoning": false,
+          "input": ["text", "image"],
+          "contextWindow": 262144,
+          "maxTokens": 65536,
+          "cost": {
+            "input": 0.1,
+            "output": 0.95,
             "cacheRead": 0,
             "cacheWrite": 0
           }
@@ -49,7 +74,7 @@
           "reasoning": false,
           "input": ["text"],
           "contextWindow": 1000000,
-          "maxTokens": 16384,
+          "maxTokens": 300000,
           "cost": {
             "input": 0.2,
             "output": 1.5,
@@ -61,7 +86,7 @@
           "id": "gemma-4-31b-it",
           "reasoning": false,
           "input": ["text", "image"],
-          "contextWindow": 262144,
+          "contextWindow": 256000,
           "maxTokens": 16384,
           "cost": {
             "input": 0.2,
