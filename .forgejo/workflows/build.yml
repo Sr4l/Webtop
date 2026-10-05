@@ -1,0 +1,33 @@
+name: build images
+
+on:
+  push:
+    branches: ["main"]
+  # allows manually triggered workflows
+  workflow_dispatch:
+  schedule:
+    # every monday at 7:00
+    - cron: '30 7 * * 1'
+
+jobs:
+  build-base:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: docker login forgejo.sr4l.de
+        shell: sh
+        run: |
+          docker login -u Sr4l -p ${{ secrets.PACKAGE_REGISTRY_TOKEN }} forgejo.sr4l.de
+
+      - name: base-alpine-forgejo
+        shell: sh
+        run: |
+          docker buildx build -f Dockerfile.base -t forgejo.sr4l.de/sr4l/webtop-base .
+          docker push forgejo.sr4l.de/sr4l/webtop-base:latest
+
+      - name: base-alpine-forgejo
+        shell: sh
+        run: |
+          docker buildx build -f Dockerfile.devenv -t forgejo.sr4l.de/sr4l/webtop-devenv .
+          docker push forgejo.sr4l.de/sr4l/webtop-devenv:latest
