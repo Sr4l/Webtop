@@ -6,28 +6,89 @@ on:
   # allows manually triggered workflows
   workflow_dispatch:
   schedule:
-    # every monday at 7:00
+    # every monday at 7:30, guarded below to only run on the first monday
     - cron: '30 7 * * 1'
+
+env:
+  FORGEJO_REGISTRY: forgejo.sr4l.de
+  DOCKERHUB_REGISTRY: docker.io
+  BASE_IMAGE_NAME: sr4l/webtop-ubuntu-kde-base
+  DEVENV_IMAGE_NAME: sr4l/webtop-ubuntu-kde-devenv
 
 jobs:
   build-base:
     runs-on: docker
     steps:
+      - name: check schedule
+        id: check
+        shell: sh
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$(date +%d)" -le 7 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v6
+        if: steps.check.outputs.run == 'true'
 
       - name: docker login forgejo.sr4l.de
+        if: steps.check.outputs.run == 'true'
         shell: sh
         run: |
-          docker login -u Sr4l -p ${{ secrets.PACKAGE_REGISTRY_TOKEN }} forgejo.sr4l.de
+          docker login -u Sr4l -p ${{ secrets.PACKAGE_REGISTRY_TOKEN }} ${FORGEJO_REGISTRY}
+
+      - name: docker login docker.io
+        if: steps.check.outputs.run == 'true'
+        shell: sh
+        run: |
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }} ${DOCKERHUB_REGISTRY}
 
       - name: build and push webtop-base
+        if: steps.check.outputs.run == 'true'
         shell: sh
         run: |
-          docker buildx build -f Dockerfile.base -t forgejo.sr4l.de/sr4l/webtop-base .
-          docker push forgejo.sr4l.de/sr4l/webtop-base:latest
+          docker build -f Dockerfile.base -t ${FORGEJO_REGISTRY}/sr4l/webtop-base:latest .
+          docker tag ${FORGEJO_REGISTRY}/sr4l/webtop-base:latest ${DOCKERHUB_REGISTRY}/${BASE_IMAGE_NAME}:latest
+          docker push ${FORGEJO_REGISTRY}/sr4l/webtop-base:latest
+          docker push ${DOCKERHUB_REGISTRY}/${BASE_IMAGE_NAME}:latest
 
       - name: build and push webtop-devenv
+        if: steps.check.outputs.run == 'true'
         shell: sh
         run: |
-          docker buildx build -f Dockerfile.devenv -t forgejo.sr4l.de/sr4l/webtop-devenv .
-          docker push forgejo.sr4l.de/sr4l/webtop-devenv:latest
+          docker build -f Dockerfile.devenv \
+            --build-arg BASE_IMAGE=${FORGEJO_REGISTRY}/sr4l/webtop-base:latest \
+            -t ${FORGEJO_REGISTRY}/sr4l/webtop-devenv:latest .
+          docker tag ${FORGEJO_REGISTRY}/sr4l/webtop-devenv:latest ${DOCKERHUB_REGISTRY}/${DEVENV_IMAGE_NAME}:latest
+          docker push ${FORGEJO_REGISTRY}/sr4l/webtop-devenv:latest
+          docker push ${DOCKERHUB_REGISTRY}/${DEVENV_IMAGE_NAME}:latest
+
+  mirror-github:
+    runs-on: docker
+    steps:
+      - name: check schedule
+        id: check
+        shell: sh
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$(date +%d)" -le 7 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v6
+        if: steps.check.outputs.run == 'true'
+        with:
+          fetch-depth: 0
+
+      - name: push main to github.com
+        if: steps.check.outputs.run == 'true'
+        shell: sh
+        run: |
+          git remote add github https://x-access-token:${{ secrets.GIT_HUB_PAT }}@github.com/Sr4l/webtop.git
+          git push github HEAD:main

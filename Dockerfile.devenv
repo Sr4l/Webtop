@@ -1,4 +1,5 @@
-FROM forgejo.sr4l.de/sr4l/webtop-base
+ARG BASE_IMAGE=sr4l/webtop-ubuntu-kde-base:latest
+FROM ${BASE_IMAGE}
 
 # Prevent interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
