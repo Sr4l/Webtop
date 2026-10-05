@@ -20,13 +20,13 @@ jobs:
         run: |
           docker login -u Sr4l -p ${{ secrets.PACKAGE_REGISTRY_TOKEN }} forgejo.sr4l.de
 
-      - name: base-alpine-forgejo
+      - name: build and push webtop-base
         shell: sh
         run: |
           docker buildx build -f Dockerfile.base -t forgejo.sr4l.de/sr4l/webtop-base .
           docker push forgejo.sr4l.de/sr4l/webtop-base:latest
 
-      - name: base-alpine-forgejo
+      - name: build and push webtop-devenv
         shell: sh
         run: |
           docker buildx build -f Dockerfile.devenv -t forgejo.sr4l.de/sr4l/webtop-devenv .
