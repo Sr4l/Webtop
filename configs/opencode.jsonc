@@ -1,32 +1,34 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "permission": {
-    "external_directory": {
-      "/opt/**": "allow",
-      "/tmp/**": "allow",
-      "/usr/**": "allow"
-    }
-  },
+  "permissions": [
+    { "action": "external_directory", "resource": "/opt/**", "effect": "allow" },
+    { "action": "external_directory", "resource": "/tmp/**", "effect": "allow" },
+    { "action": "external_directory", "resource": "/usr/**", "effect": "allow" }
+  ],
   "mcp": {
-    "firefox-devtools": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@mozilla/firefox-devtools-mcp@latest",
-        "--enable-scripting",
-        "--enable-privileged-context",
-        "--connect-existing"
-      ],
-      "enabled": true,
-      "timeout": 65536
+    "servers": {
+      "firefox-devtools": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@mozilla/firefox-devtools-mcp@latest",
+          "--enable-scripting",
+          "--enable-privileged-context",
+          "--connect-existing"
+        ],
+        "timeout": {
+          "catalog": 65536,
+          "execution": 65536
+        }
+      }
     }
   },
-  "provider": {
+  "providers": {
     "chatai": {
-      "npm": "@ai-sdk/openai-compatible",
+      "package": "aisdk:@ai-sdk/openai-compatible",
       "name": "ChatAi",
-      "options": {
+      "settings": {
         "baseURL": "https://chat-ai.academiccloud.de/v1"
       },
       "models": {
@@ -36,7 +38,7 @@
             "input": 0.39,
             "output": 2.45
           },
-          "modalities": {
+          "capabilities": {
             "tools": true,
             "input": ["text", "image"],
             "output": ["text"]
@@ -52,7 +54,7 @@
             "input": 0.26,
             "output": 2.08
           },
-          "modalities": {
+          "capabilities": {
             "tools": true,
             "input": ["text", "image"],
             "output": ["text"]
@@ -68,7 +70,7 @@
             "input": 0.075,
             "output": 0.25
           },
-          "modalities": {
+          "capabilities": {
             "tools": true,
             "input": ["text","image","video"],
             "output": ["text"]
@@ -84,7 +86,7 @@
             "input": 0.10,
             "output": 0.95
           },
-          "modalities": {
+          "capabilities": {
             "tools": true,
             "input": ["text", "image"],
             "output": ["text"]
@@ -100,7 +102,7 @@
             "input": 0.35,
             "output": 2.75
           },
-          "modalities": {
+          "capabilities": {
             "tools": true,
             "input": ["text", "image"],
             "output": ["text"]
@@ -116,7 +118,7 @@
             "input": 0.09,
             "output": 0.18
           },
-          "modalities": {
+          "capabilities": {
             "tools": true,
             "input": ["text"],
             "output": ["text"]
@@ -132,7 +134,7 @@
             "input": 0.03,
             "output": 0.17
           },
-          "modalities": {
+          "capabilities": {
             "tools": true,
             "input": ["text"],
             "output": ["text"]
@@ -148,7 +150,7 @@
             "input": 0.09,
             "output": 0.34
           },
-          "modalities": {
+          "capabilities": {
             "tools": true,
             "input": ["text", "image"],
             "output": ["text"]
