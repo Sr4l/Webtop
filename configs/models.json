@@ -83,19 +83,6 @@
           }
         },
         {
-          "id": "qwen3.8-35b-a3b",
-          "reasoning": true,
-          "input": ["text", "image"],
-          "contextWindow": 262144,
-          "maxTokens": 65536,
-          "cost": {
-            "input": 0.1,
-            "output": 0.95,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          }
-        },
-        {
           "id": "gemma-4-31b-it",
           "reasoning": true,
           "input": ["text", "image"],
