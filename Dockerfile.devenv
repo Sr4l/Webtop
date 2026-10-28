@@ -40,7 +40,7 @@ RUN apt-get update && \
 # Batch 2: JS dev, VS Code, browsers, desktop apps
 RUN apt-get update && \
     apt-get install -y --no-install-recommends nodejs npm \
-    && npm install -g typescript esbuild @earendil-works/pi-coding-agent opencode-ai \
+    && npm install -g typescript esbuild @earendil-works/pi-coding-agent @opencode/cli \
     && npm cache clean --force \
     && wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg \
     && apt-get clean \
@@ -50,7 +50,7 @@ COPY configs/vscode.sources /etc/apt/sources.list.d/vscode.sources
 
 RUN apt-get update && \
     apt-get install -y code \
-    && sed -i 's/Exec=\/usr\/share\/code\/code /Exec=\/usr\/share\/code\/code --no-sandbox /g' /usr/share/applications/code.desktop \
+    && sed -i 's/Exec=\/usr\/share\/code\/code /Exec=\/usr\/share\/code\/code --no-sandbox /g' /usr/share/applications/com.microsoft.VSCode.desktop \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
