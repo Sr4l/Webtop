@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Terminal
+Comment=Open a terminal
+Exec=/usr/bin/konsole --workdir /home/ubuntu
+Path=/home/ubuntu
+Icon=utilities-terminal
+Terminal=false
+Categories=System;TerminalEmulator;
+Keywords=terminal;shell;bash;console;
+StartupNotify=true
+StartupWMClass=konsole

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Pi
+Comment=AI coding agent
+Exec=/usr/bin/konsole --qwindowtitle Pi --qwindowicon pi --workdir /home/ubuntu -e /usr/local/bin/pi
+Path=/home/ubuntu
+Icon=pi
+Terminal=false
+Categories=Development;
+Keywords=ai;coding;agent;terminal;
+StartupNotify=true

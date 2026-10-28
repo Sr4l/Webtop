@@ -1,6 +1,15 @@
 [General]
-count=1
-rules=61b283b3-439f-49b5-a6a1-f20a02f81ed2
+count=2
+rules=61b283b3-439f-49b5-a6a1-f20a02f81ed2,9f2d3c4b-1a2e-4f6b-8c7d-5e4f3a2b1c0d
+
+[9f2d3c4b-1a2e-4f6b-8c7d-5e4f3a2b1c0d]
+Description=Maximize coding agent terminals
+title=^(OpenCode|Pi)$
+titlematch=3
+maximizehoriz=true
+maximizehorizrule=2
+maximizevert=true
+maximizevertrule=2
 
 [61b283b3-439f-49b5-a6a1-f20a02f81ed2]
 Description=wl-clipboard support

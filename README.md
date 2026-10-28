@@ -91,3 +91,10 @@ make push-devenv
 - **Streaming**: Selkies (pixelflux/pcmflux, WebSockets mode, JPEG encoder)
 - **Audio**: PipeWire + WirePlumber + null sink
 - **Runtime**: supervisord (dbus, pipewire, selkies, kwin, plasmashell, …)
+
+## Desktop launchers
+
+The development image ships desktop launchers for [OpenCode](https://opencode.ai) (`opencode`),
+[Pi](https://github.com/earendil-works/pi) (`pi`) and a terminal. OpenCode and Pi appear in the
+Kickoff application menu under **Development**; all three are available as icons on the Plasma
+desktop. The agents start in a maximized Konsole window in `/home/ubuntu`.
