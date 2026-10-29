@@ -56,7 +56,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends vlc gimp inkscape libreoffice-calc libreoffice-writer software-properties-common gummi okular gwenview geany kate \
+    apt-get install -y --no-install-recommends vlc gimp inkscape libreoffice-calc libreoffice-writer software-properties-common gummi okular gwenview geany kate ark \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
